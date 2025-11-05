@@ -18,8 +18,8 @@ export default function Header() {
         {/* Nav */}
         <nav className="hidden md:flex items-center gap-3 text-sm">
           <span className="px-3 py-1 rounded-full border border-[#FFC145]/40 text-[#FFC145] bg-[#FFC145]/10">Overview</span>
-          <button className="text-white/70 hover:text-white">Markets</button>
-          <button className="text-white/70 hover:text-white">News</button>
+          <button className="text-white/70 hover:text-white cursor-pointer">Markets</button>
+          <button className="text-white/70 hover:text-white cursor-pointer">News</button>
         </nav>
       </div>
 
@@ -35,7 +35,7 @@ export default function Header() {
         </div>
 
         {/* Buy button */}
-        <button className="h-9 px-4 rounded-full bg-[#FFC145] text-[#343A40] text-sm font-medium transition hover:bg-[#FF6B6B] hover:text-white">
+        <button className="h-9 px-4 rounded-full bg-[#FFC145] text-[#343A40] text-sm font-medium transition hover:bg-yellow-500 cursor-pointer">
           Buy Crypto
         </button>
 
