@@ -1,5 +1,5 @@
 @import "tailwindcss";
 
 body {
-    background-color: black;
+    background-color: #f3f4f6; /* This is the hex equivalent of bg-gray-100 in Tailwind */
 }

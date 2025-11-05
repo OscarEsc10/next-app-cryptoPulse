@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sora, JetBrains_Mono } from "next/font/google";
 import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
 import "./globals.css";
 
 // Modern, distinctive sans for crypto UI
@@ -38,11 +39,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${sora.variable} ${jetbrainsMono.variable} font-sans antialiased`}
-      >
-        <Header/>
-        {children}
+      <body className={`${sora.variable} ${jetbrainsMono.variable} font-sans antialiased bg-gray-50`}>
+        <Header />
+        <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
