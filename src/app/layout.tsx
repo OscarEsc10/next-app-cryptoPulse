@@ -22,7 +22,14 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Crypto",
   description: "Learning 'bout Crypto",
+  icons: {
+    icon: "/crypto.png",
+    shortcut: "/crypto.png",
+    apple: "/crypto.png",
+  },
 };
+
+
 
 export default function RootLayout({
   children,
