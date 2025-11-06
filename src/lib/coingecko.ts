@@ -1,20 +1,10 @@
 import axios from "axios";
 import { CryptoCurrency } from "../types/coingeckoInterface";
+import { api } from "./axios.client";
 
-const COINGECKO_API_KEY = process.env.NEXT_PUBLIC_COINGECKO_API_KEY || "";
-const BASE_URL = "https://api.coingecko.com/api/v3";
-
-if (!COINGECKO_API_KEY) {
+if (!api) {
   console.warn("CoinGecko API key is not set. Some features may not work correctly.");
 }
-
-const api = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-    ...(COINGECKO_API_KEY && { "X-CoinGecko-Api-Key": COINGECKO_API_KEY }),
-  },
-});
 
 export const GetTopCryptos = async (limit: number = 10): Promise<CryptoCurrency[]> => {
   try {
