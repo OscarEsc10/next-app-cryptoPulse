@@ -3,13 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FiHome, FiPieChart, FiTrendingUp, FiBell, FiSettings } from "react-icons/fi";
 import { useEffect, useRef, useState } from "react";
-
-interface MenuItem {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-  alsoStartsWith?: string[];
-}
+import { MenuItem } from "../../types/SideBar.Interface";
 
 export default function Sidebar() {
   const pathname = usePathname();
