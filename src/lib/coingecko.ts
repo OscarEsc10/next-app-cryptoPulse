@@ -1,10 +1,19 @@
-import axios from "axios";
 import { CryptoCurrency } from "../types/coingeckoInterface";
 import { api } from "./axios.client";
 
 if (!api) {
   console.warn("CoinGecko API key is not set. Some features may not work correctly.");
 }
+
+export const GetGlobalData = async (): Promise<any> => {
+  try {
+    const { data } = await api.get("/global");
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching global data:", error.message);
+    throw new Error(`Failed to fetch global data: ${error.message}`);
+  }
+};
 
 export const GetTopCryptos = async (limit: number = 10): Promise<CryptoCurrency[]> => {
   try {
@@ -31,15 +40,5 @@ export const GetCoinDetails = async (id: string): Promise<any> => {
   } catch (error: any) {
     console.error(`Error fetching coin details for ${id}:`, error.message);
     throw new Error(`Failed to fetch coin details for ${id}: ${error.message}`);
-  }
-};
-
-export const GetGlobalData = async (): Promise<any> => {
-  try {
-    const { data } = await api.get("/global");
-    return data;
-  } catch (error: any) {
-    console.error("Error fetching global data:", error.message);
-    throw new Error(`Failed to fetch global data: ${error.message}`);
   }
 };
