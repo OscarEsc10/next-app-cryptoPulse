@@ -50,37 +50,42 @@ export default function Sidebar() {
   return (
     <aside className="w-64 min-h-screen bg-white p-6 border-r border-gray-100 relative">
       <div className="flex items-center gap-2 mb-8">
-        <span className="text-lg font-bold">Crypto Navigation</span>
+        <span className="text-xl font-bold text-gray-800">CryptoPulse</span>
       </div>
       
       <nav>
-        <ul className="space-y-1 relative">
+        <ul className="space-y-2 relative">
           {/* Sliding indicator */}
           <div 
             className="absolute left-0 w-1 bg-blue-500 rounded-r transition-all duration-300 ease-out"
             style={indicatorStyle}
           />
           
-          {menuItems.map((item, index) => {
+          {menuItems.map((item) => {
             const active = isActive(item);
             return (
               <li 
                 key={item.href} 
                 ref={setItemRef(item.href)}
-                className="relative"
+                className="relative group"
               >
                 <Link 
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 ease-out ${
                     active 
-                      ? 'text-blue-600 bg-blue-50 pl-6' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:pl-6'
+                      ? 'text-blue-600 bg-blue-50 font-semibold' 
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
-                  <span className={`transition-colors duration-300 ${active ? 'text-blue-500' : 'text-gray-500'}`}>
+                  <span className={`transition-colors duration-300 ${
+                    active ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600'
+                  }`}>
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
+                  {active && (
+                    <span className="absolute right-4 w-2 h-2 bg-blue-500 rounded-full"></span>
+                  )}
                 </Link>
               </li>
             );
