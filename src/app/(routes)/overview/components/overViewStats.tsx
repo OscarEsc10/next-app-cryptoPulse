@@ -7,7 +7,9 @@ const OverviewStats: React.FC = () => {
   const { globalData, coins, loading, error } = useOverviewData();
 
   if (loading) return <p className="text-center text-gray-500">Loading overview data...</p>;
-  if (error) return <p className="text-center text-red-500">Error: {error}</p>;
+  if (loading) return <div className="p-4">Loading market data...</div>;
+  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+  if (!globalData || coins.length === 0) return <div className="p-4">No market data available</div>;
 
   const btcDominance = globalData?.market_cap_percentage?.btc?.toFixed(2);
   const ethDominance = globalData?.market_cap_percentage?.eth?.toFixed(2);
@@ -65,7 +67,6 @@ const OverviewStats: React.FC = () => {
               className="border border-gray-100 p-5 rounded-xl hover:shadow-md transition"
             >
               <div className="flex items-center gap-3 mb-4">
-                <img src={coin.image.small} alt={coin.name} className="w-8 h-8" />
                 <div>
                   <p className="font-medium text-gray-800">{coin.name}</p>
                   <p className="text-sm text-gray-500">{coin.symbol.toUpperCase()}</p>
@@ -74,21 +75,25 @@ const OverviewStats: React.FC = () => {
 
               <p className="text-sm text-gray-500">Current Price (USD)</p>
               <p className="text-lg font-semibold mb-2">
-                ${coin.market_data.current_price.usd.toLocaleString()}
+                ${coin.current_price?.toLocaleString() || 'N/A'}
               </p>
 
               <p className="text-sm text-gray-500">Market Cap Rank</p>
-              <p className="text-lg font-semibold mb-2">#{coin.market_cap_rank}</p>
+              <p className="text-lg font-semibold mb-2">
+                {coin.market_cap_rank ? `#${coin.market_cap_rank}` : 'N/A'}
+              </p>
 
               <p className="text-sm text-gray-500">24h Price Change</p>
               <p
                 className={`text-lg font-semibold ${
-                  coin.market_data.price_change_percentage_24h > 0
+                  coin.price_change_percentage_24h > 0
                     ? "text-green-500"
                     : "text-red-500"
                 }`}
               >
-                {coin.market_data.price_change_percentage_24h.toFixed(2)}%
+                {coin.price_change_percentage_24h
+                  ? `${coin.price_change_percentage_24h.toFixed(2)}%`
+                  : "N/A"}
               </p>
             </div>
           ))}

@@ -1,44 +1,66 @@
 import { CryptoCurrency } from "../types/coingeckoInterface";
-import { api } from "./axios.client";
 
-if (!api) {
-  console.warn("CoinGecko API key is not set. Some features may not work correctly.");
+const API_BASE = '/api/coingecko';
+
+// Helper function to handle API calls
+async function fetchFromApi<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
+  try {
+    const queryString = new URLSearchParams();
+    
+    // Add all non-undefined params to query string
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryString.append(key, String(value));
+      }
+    });
+
+    const url = `${API_BASE}?endpoint=${endpoint}&${queryString.toString()}`;
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json().catch(() => ({}));
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'API request failed');
+    }
+
+    // Handle the response structure from our API route
+    if (data.data !== undefined) {
+      return data.data;
+    }
+    
+    return data;
+  } catch (error: any) {
+    console.error(`API Error (${endpoint}):`, error.message);
+    throw new Error(`Failed to fetch ${endpoint}: ${error.message}`);
+  }
 }
 
 export const GetGlobalData = async (): Promise<any> => {
-  try {
-    const { data } = await api.get("/global");
-    return data;
-  } catch (error: any) {
-    console.error("Error fetching global data:", error.message);
-    throw new Error(`Failed to fetch global data: ${error.message}`);
-  }
+  return fetchFromApi('global');
 };
 
-export const GetTopCryptos = async (limit: number = 10): Promise<CryptoCurrency[]> => {
-  try {
-    const { data } = await api.get<CryptoCurrency[]>("/coins/markets", {
-      params: {
-        vs_currency: "usd",
-        order: "market_cap_desc",
-        per_page: limit,
-        page: 1,
-        sparkline: false,
-      },
-    });
-    return data;
-  } catch (error: any) {
-    console.error("Error fetching top cryptocurrencies:", error.message);
-    throw new Error(`Failed to fetch top cryptocurrencies: ${error.message}`);
-  }
+export const GetTopCryptos = async (limit: number = 10, ids?: string[]): Promise<CryptoCurrency[]> => {
+  return fetchFromApi('coins/markets', {
+    vs_currency: 'usd',
+    order: 'market_cap_desc',
+    per_page: limit,
+    page: 1,
+    sparkline: false,
+    ids: ids ? ids.join(',') : undefined
+  });
 };
 
 export const GetCoinDetails = async (id: string): Promise<any> => {
-  try {
-    const { data } = await api.get(`/coins/${id}`);
-    return data;
-  } catch (error: any) {
-    console.error(`Error fetching coin details for ${id}:`, error.message);
-    throw new Error(`Failed to fetch coin details for ${id}: ${error.message}`);
-  }
+  return fetchFromApi(`coins/${id}`, {
+    localization: false,
+    tickers: false,
+    market_data: true,
+    community_data: false,
+    developer_data: false,
+    sparkline: false
+  });
 };

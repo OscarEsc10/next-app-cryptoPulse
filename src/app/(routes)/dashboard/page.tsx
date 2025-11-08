@@ -143,11 +143,6 @@ const DashboardStats = () => {
 export default function DashboardPage() {
   return (
     <div className="space-y-8 p-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-gray-600">Your crypto overview at a glance</p>
-      </div>
-
       <Suspense fallback={<LoadingSpinner />}>
         <DashboardStats />
       </Suspense>
