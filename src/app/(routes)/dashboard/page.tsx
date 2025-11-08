@@ -1,23 +1,57 @@
 "use client";
 
 import { Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGlobalData, GlobalData } from '../../../hooks/useGlobalData';
-import { TrendingUp, BarChart2, Clock, AlertCircle } from 'lucide-react';
+import { TrendingUp, BarChart2, Clock, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react';
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 100,
+      damping: 15
+    }
+  }
+} as const;
 
 // Loading component for Suspense fallback
 function LoadingSpinner() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <motion.div 
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
       {[1, 2, 3].map((i) => (
-        <div key={i} className="bg-white p-6 rounded-xl shadow-sm">
-          <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-            <div className="h-4 bg-gray-100 rounded w-1/3"></div>
+        <motion.div 
+          key={i} 
+          className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
+          variants={itemVariants}
+        >
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded w-1/2"></div>
+            <div className="h-8 bg-gradient-to-r from-gray-100 to-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded w-1/3"></div>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
@@ -35,39 +69,62 @@ const StatCard = ({
   icon: React.ElementType;
   loading?: boolean;
 }) => (
-  <div className="p-6 border border-gray-200 rounded-lg hover:border-blue-200 transition-colors">
-    <div className="flex items-center justify-between">
+  <motion.div 
+    className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+    whileHover={{ y: -2, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+  >
+    <div className="flex items-start justify-between">
       <div className="flex-1">
         <p className="text-sm font-medium text-gray-500 mb-2">{title}</p>
         {loading ? (
-          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-8 w-32 bg-gradient-to-r from-gray-100 to-gray-200 rounded animate-pulse"></div>
         ) : (
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <motion.p 
+            className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            {value}
+          </motion.p>
         )}
         {change !== undefined && (
-          <p className={`text-sm mt-2 flex items-center ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+          <motion.div 
+            className={`inline-flex items-center mt-2 px-2.5 py-1 rounded-full text-xs font-medium ${
+              change >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+            }`}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+          >
             {change >= 0 ? (
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M12 7a1 1 0 01.707.293l5 5a1 1 0 01-1.414 1.414L12 9.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5A1 1 0 0112 7z" clipRule="evenodd" />
-              </svg>
+              <ArrowUp className="w-3 h-3 mr-1" />
             ) : (
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M12 13a1 1 0 01-.707-.293l-5-5a1 1 0 011.414-1.414L12 10.586l4.293-4.293a1 1 0 011.414 1.414l-5 5A1 1 0 0112 13z" clipRule="evenodd" />
-              </svg>
+              <ArrowDown className="w-3 h-3 mr-1" />
             )}
             {Math.abs(change).toFixed(2)}%
-          </p>
+          </motion.div>
         )}
       </div>
-      <div className={`p-3 rounded-full ${loading ? 'bg-gray-100' : 'bg-blue-50'} text-blue-600`}>
+      <motion.div 
+        className={`p-3 rounded-2xl ${
+          loading ? 'bg-gray-100' : 'bg-blue-50 text-blue-600'
+        }`}
+        initial={{ scale: 0.9, opacity: 0.8 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
         {loading ? (
           <div className="w-6 h-6"></div>
         ) : (
-          <Icon className="w-6 h-6" />
+          <Icon className="w-5 h-5" />
         )}
-      </div>
+      </motion.div>
     </div>
-  </div>
+  </motion.div>
 );
 
 const DashboardStats = () => {
@@ -96,7 +153,8 @@ const DashboardStats = () => {
       value: formatCurrency(globalData?.total_market_cap?.usd),
       change: globalData?.market_cap_change_percentage_24h_usd,
       icon: BarChart2,
-      loading: loading || !globalData
+      loading: loading || !globalData,
+      color: 'from-blue-500 to-blue-600'
     },
     {
       title: "24h Trading Volume",
@@ -142,12 +200,31 @@ const DashboardStats = () => {
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-8 p-6">
-      <Suspense fallback={<LoadingSpinner />}>
-        <DashboardStats />
-      </Suspense>
-
-      {/* Additional sections can be added here */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      <motion.div 
+        className="max-w-7xl mx-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-8"
+        >
+        </motion.div>
+        
+        <Suspense fallback={<LoadingSpinner />}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <DashboardStats />
+          </motion.div>
+        </Suspense>
+      </motion.div>
     </div>
   );
-}
+};
