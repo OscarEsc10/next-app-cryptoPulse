@@ -73,19 +73,16 @@ export default function Sidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 ease-out ${
                     active 
-                      ? 'text-blue-600 bg-blue-50 font-semibold' 
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? 'text-blue-600 bg-blue-50 font-semibold translate-x-1' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:translate-x-1 hover:text-blue-500'
                   }`}
                 >
-                  <span className={`transition-colors duration-300 ${
-                    active ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600'
+                  <span className={`transition-all duration-300 ${
+                    active ? 'text-blue-500 scale-110' : 'text-gray-400 group-hover:text-blue-400 group-hover:scale-110'
                   }`}>
                     {item.icon}
                   </span>
-                  <span>{item.label}</span>
-                  {active && (
-                    <span className="absolute right-4 w-2 h-2 bg-blue-500 rounded-full"></span>
-                  )}
+                  <span className="transition-all duration-300">{item.label}</span>
                 </Link>
               </li>
             );
