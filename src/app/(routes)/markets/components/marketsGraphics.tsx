@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { CryptoCurrency } from "@/types/coingeckoInterface";
 import { formatCurrency } from "@/lib/utils";
 import { Loader2, ArrowUp, ArrowDown } from "lucide-react";
+import { ChartDataPoint, ChartSeries } from "../../../../types/MarketsInterface";
 
 // Dynamically import ApexCharts to avoid SSR issues
 const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -13,20 +14,6 @@ const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
 type ChartType = 'line' | 'bubble';
 type TimeRange = '1d' | '7d' | '14d' | '30d' | '90d' | '1y';
 
-interface ChartDataPoint {
-  x: number;
-  y: number;
-  z?: number;
-}
-
-interface ChartSeries {
-  name: string;
-  data: Array<{
-    x: Date;
-    y: number;
-    z?: number;
-  }>;
-}
 
 export const MarketGraphics = () => {
   const { coins = [], loading = false, error = null } = useMarketData();
