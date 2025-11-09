@@ -31,7 +31,7 @@ const item = {
 
 export default function Home() {
   return (
-    <div className="min-h-[80vh] flex items-center bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[80vh] flex items-center bg-gradient-to-br py-12 px-4 sm:px-6 lg:px-8">
       <motion.div 
         className="w-full max-w-7xl mx-auto"
         initial="hidden"
@@ -77,7 +77,7 @@ export default function Home() {
               {[1, 2, 3].map((i) => (
                 <motion.div 
                   key={i} 
-                  className="p-6 bg-white/30 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20"
+                  className="p-6 backdrop-blur-lg rounded-2xl shadow-lg"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ 
                     opacity: 1, 
@@ -98,7 +98,7 @@ export default function Home() {
             </div>
           }>
             <motion.div
-              className="bg-white/60 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/20"
+              className="backdrop-blur-lg p-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}

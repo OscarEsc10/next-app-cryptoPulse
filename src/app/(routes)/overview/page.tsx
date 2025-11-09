@@ -31,7 +31,7 @@ const item = {
 
 export default function OverviewPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br py-8 px-4 sm:px-6 lg:px-8">
       <motion.div 
         className="max-w-7xl mx-auto"
         initial="hidden"
@@ -61,7 +61,7 @@ export default function OverviewPage() {
         </motion.div>
 
         <motion.div
-          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-100"
+          className="backdrop-blur-sm p-6"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}

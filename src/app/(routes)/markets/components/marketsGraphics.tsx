@@ -218,7 +218,7 @@ export const MarketGraphics = () => {
     : <ArrowDown className="w-4 h-4" />;
 
   return (
-    <div className={`bg-white rounded-xl p-6 shadow-lg transition-all duration-300 ${isTransitioning ? 'opacity-75' : 'opacity-100'}`}>
+    <div className={` transition-all duration-300 ${isTransitioning ? 'opacity-75' : 'opacity-100'}`}>
       {/* Header with coin info and controls */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
         <div className="flex items-center space-x-4">

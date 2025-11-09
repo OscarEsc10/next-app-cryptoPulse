@@ -41,7 +41,12 @@ function LoadingSpinner() {
       {[1, 2, 3].map((i) => (
         <motion.div 
           key={i} 
-          className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
+          className="p-6 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl border border-gray-100"
+          whileHover={{ 
+            y: -3, 
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            transition: { duration: 0.2 }
+          }}
           variants={itemVariants}
         >
           <div className="animate-pulse space-y-4">
@@ -70,8 +75,12 @@ const StatCard = ({
   loading?: boolean;
 }) => (
   <motion.div 
-    className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
-    whileHover={{ y: -2, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)' }}
+    className="p-6 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl border border-gray-100"
+    whileHover={{ 
+      y: -3, 
+      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      transition: { duration: 0.2 }
+    }}
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ type: 'spring', stiffness: 100, damping: 15 }}
@@ -175,15 +184,14 @@ const DashboardStats = () => {
   if (error) {
     return (
       <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r">
-        <div className="flex">
-          <div className="shrink-0">
-            <AlertCircle className="h-5 w-5 text-red-500" />
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-800">Market Overview</h2>
+            <div className="h-6 w-24 bg-gray-100 rounded-full animate-pulse"></div>
           </div>
-          <div className="ml-3">
-            <p className="text-sm text-red-700">
-              {`Failed to load market data. ${error}. Please try again later.`}
-            </p>
-          </div>
+          <p className="text-sm text-red-700">
+            {`Failed to load market data. ${error}. Please try again later.`}
+          </p>
         </div>
       </div>
     );
@@ -200,7 +208,7 @@ const DashboardStats = () => {
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="bg-gradient-to-br py-8 px-4 sm:px-6 lg:px-8">
       <motion.div 
         className="max-w-7xl mx-auto"
         initial={{ opacity: 0 }}

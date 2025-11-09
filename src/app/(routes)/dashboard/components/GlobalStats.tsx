@@ -8,7 +8,7 @@ const GlobalStats: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full max-w-6xl mx-auto mt-6 bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="w-full max-w-6xl mx-auto mt-6 bg-white rounded-xl shadow-sm overfloww-hidden">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-800">Market Overview</h2>
