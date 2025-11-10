@@ -1,82 +1,89 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useMarketData } from "../../../../hooks/useMarketGraphics";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useMarketData, getDaysFromRange, TimeRange } from "../../../../hooks/useMarketGraphics";
 import dynamic from 'next/dynamic';
+import { ApexOptions } from 'apexcharts';
 import { CryptoCurrency } from "@/types/coingeckoInterface";
 import { formatCurrency } from "@/lib/utils";
 import { Loader2, ArrowUp, ArrowDown } from "lucide-react";
 import { ChartDataPoint, ChartSeries } from "../../../../types/MarketsInterface";
 
 // Dynamically import ApexCharts to avoid SSR issues
-const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
+const ReactApexChart = dynamic(() => import('react-apexcharts'), { 
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      <span className="ml-2">Loading chart...</span>
+    </div>
+  )
+});
 
 type ChartType = 'line' | 'bubble';
-type TimeRange = '1d' | '7d' | '14d' | '30d' | '90d' | '1y';
-
 
 export const MarketGraphics = () => {
-  const { coins = [], loading = false, error = null } = useMarketData();
+  const { 
+    coins = [], 
+    loading = false, 
+    error = null, 
+    historicalData, 
+    fetchHistoricalData 
+  } = useMarketData();
+  
   const [selectedCoin, setSelectedCoin] = useState<CryptoCurrency | null>(null);
   const [chartType, setChartType] = useState<ChartType>('line');
   const [timeRange, setTimeRange] = useState<TimeRange>('7d');
-  const [chartData, setChartData] = useState<ChartSeries[] | null>(null);
-  const [chartOptions, setChartOptions] = useState<any>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const prevCoinIdRef = useRef<string | null>(null);
+  const prevTimeRangeRef = useRef<TimeRange>('7d');
   
   // Generate chart data based on selected coin and time range
-  const generateChartData = useCallback(() => {
-    if (!selectedCoin) return { data: [], options: {} };
-    
-    const days = {
-      '1d': 1,
-      '7d': 7,
-      '14d': 14,
-      '30d': 30,
-      '90d': 90,
-      '1y': 365,
-    }[timeRange] || 7;
-
-    const basePrice = selectedCoin.current_price;
-    const volatility = selectedCoin.price_change_percentage_24h / 100 || 0.1;
-
-    // Generate data points
-    const data: ChartDataPoint[] = Array.from({ length: days }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (days - i));
-      const priceChange = (Math.random() * 2 - 1) * volatility * basePrice;
-      const price = basePrice + priceChange;
-      const volume = Math.random() * (selectedCoin.total_volume * 0.1) || 1000000;
-
-      return {
-        x: date.getTime(),
-        y: price,
-        z: Math.sqrt(volume) * 0.01, // Bubble size based on volume
-      };
-    });
+  const { chartData, chartOptions } = useMemo(() => {
+    const defaultOptions: ApexOptions = {};
+    if (!selectedCoin) return { chartData: [], chartOptions: defaultOptions };
 
     const isLineChart = chartType === 'line';
+    const dataKey = `${selectedCoin.id}_${timeRange}`;
+    const historicalPoints = historicalData[dataKey] || [];
     
+    // Process the data points from the API
     const series: ChartSeries[] = [{
-      name: isLineChart ? selectedCoin.name : 'Volume',
-      data: data.map(item => ({
-        x: new Date(item.x),
-        y: item.y,
-        ...(!isLineChart && { z: item.z })
-      }))
+      name: isLineChart ? selectedCoin.name : 'Price',
+      data: Array.isArray(historicalPoints) 
+        ? historicalPoints.map((point: any) => ({
+            x: new Date(point[0]), // Convert timestamp to Date
+            y: point[1],           // Price value
+            z: isLineChart ? undefined : Math.sqrt(selectedCoin.total_volume * 0.1) * 0.01
+          }))
+        : []
     }];
 
-    const options = {
+    const options: ApexOptions = {
       chart: {
         type: chartType,
         height: 350,
         background: 'transparent',
         foreColor: '#1f2937',
-        toolbar: { show: true },
-        zoom: { enabled: true },
-        animations: {
+        toolbar: {
+          show: true,
+          tools: {
+            download: true,
+            selection: true,
+            zoom: true,
+            zoomin: true,
+            zoomout: true,
+            pan: true,
+            reset: true
+          }
+        },
+        zoom: {
           enabled: true,
-          easing: 'easeinout',
+          type: 'x',
+          autoScaleYaxis: true
+        },
+        animations: {
+          enabled: !isTransitioning,
           speed: 800,
           animateGradually: {
             enabled: true,
@@ -95,21 +102,55 @@ export const MarketGraphics = () => {
       xaxis: {
         type: 'datetime',
         labels: {
-          style: { colors: '#6b7280' }
+          style: { colors: '#6b7280' },
+          datetimeUTC: false,
+          format: timeRange === '1d' ? 'HH:mm' : 'dd MMM',
+        },
+        tooltip: {
+          enabled: true,
+          formatter: (value: any) => {
+            const date = new Date(value);
+            return date.toLocaleString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+          }
         }
       },
       yaxis: {
+        forceNiceScale: true,
         labels: {
-          formatter: (val: number) => formatCurrency(val, 'USD'),
-          style: { colors: '#6b7280' }
+          formatter: (value: number) => `$${value.toFixed(2)}`
+        },
+        axisBorder: {
+          show: true
+        },
+        axisTicks: {
+          show: true
         }
       },
       tooltip: {
-        x: { format: 'dd MMM yyyy' },
+        x: { 
+          format: timeRange === '1d' ? 'HH:mm' : 'dd MMM yyyy',
+          show: true
+        },
         y: {
           formatter: (val: number) => formatCurrency(val, 'USD')
         },
-        theme: 'dark'
+        theme: 'dark',
+        marker: {
+          show: true,
+        },
+        fixed: {
+          enabled: true,
+          position: 'topLeft',
+          offsetY: 30,
+          offsetX: 60
+        }
       },
       grid: {
         borderColor: '#e5e7eb',
@@ -120,67 +161,76 @@ export const MarketGraphics = () => {
       plotOptions: isLineChart ? {} : {
         bubble: {
           minBubbleRadius: 5,
-          maxBubbleRadius: 15,
-          fillOpacity: 0.7
+          maxBubbleRadius: 15
+        }
+      },
+      fill: {
+        opacity: 0.7
+      },
+      noData: {
+        text: 'Loading data...',
+        align: 'center' as const,
+        verticalAlign: 'middle' as const,
+        offsetX: 0,
+        offsetY: 0,
+        style: {
+          color: '#6b7280',
+          fontSize: '14px',
+          fontFamily: 'Inter, sans-serif'
         }
       }
     };
 
-    return { data: series, options };
-  }, [selectedCoin, chartType, timeRange]);
+    return { chartData: series, chartOptions: options };
+  }, [selectedCoin, chartType, timeRange, historicalData, isTransitioning]);
 
-  // Set first coin as selected by default
+  // Set first coin as selected by default and fetch its data
   useEffect(() => {
     if (coins.length > 0 && !selectedCoin) {
-      setIsTransitioning(true);
-      setSelectedCoin(coins[0]);
-      setTimeout(() => setIsTransitioning(false), 300);
+      const firstCoin = coins[0];
+      setSelectedCoin(firstCoin);
+      fetchHistoricalData(firstCoin.id, timeRange);
     }
-  }, [coins, selectedCoin]);
+  }, [coins, selectedCoin, timeRange, fetchHistoricalData]);
 
-  // Generate chart data based on selected coin and time range
+  // Handle time range or coin changes
   useEffect(() => {
     if (!selectedCoin) return;
-
-    const updateChart = () => {
-      const { data, options } = generateChartData();
-      setChartData(data);
-      setChartOptions(options);
-      setIsTransitioning(false);
-    };
-
-    setIsTransitioning(true);
-    const timer = setTimeout(updateChart, 300);
-
-    return () => clearTimeout(timer);
-  }, [generateChartData, selectedCoin]);
+    
+    const shouldFetchData = 
+      selectedCoin.id !== prevCoinIdRef.current || 
+      timeRange !== prevTimeRangeRef.current;
+    
+    if (shouldFetchData) {
+      setIsTransitioning(true);
+      fetchHistoricalData(selectedCoin.id, timeRange)
+        .finally(() => setIsTransitioning(false));
+      
+      prevCoinIdRef.current = selectedCoin.id;
+      prevTimeRangeRef.current = timeRange;
+    }
+  }, [selectedCoin, timeRange, fetchHistoricalData]);
 
   // Handle coin selection change
   const handleCoinChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setIsTransitioning(true);
     const selected = coins.find((coin: CryptoCurrency) => coin.id === e.target.value);
     if (selected) {
-      requestAnimationFrame(() => {
-        setSelectedCoin(selected);
-        setTimeout(() => setIsTransitioning(false), 500);
-      });
+      setSelectedCoin(selected);
     }
   }, [coins]);
 
-  // Handle chart type change with transition
+  // Handle chart type change
   const handleChartTypeChange = useCallback((type: ChartType) => {
-    if (type === chartType) return;
-    setIsTransitioning(true);
-    setChartType(type);
-    setTimeout(() => setIsTransitioning(false), 500);
+    if (type !== chartType) {
+      setChartType(type);
+    }
   }, [chartType]);
   
-  // Handle time range change with transition
+  // Handle time range change
   const handleTimeRangeChange = useCallback((range: TimeRange) => {
-    if (range === timeRange) return;
-    setIsTransitioning(true);
-    setTimeRange(range);
-    setTimeout(() => setIsTransitioning(false), 500);
+    if (range !== timeRange) {
+      setTimeRange(range);
+    }
   }, [timeRange]);
 
 
@@ -326,20 +376,14 @@ export const MarketGraphics = () => {
         </div>
       )}
       
-      {chartData && chartOptions ? (
-        <div className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-30' : 'opacity-100'}`}>
-          <ReactApexChart
-            options={chartOptions}
-            series={chartData}
-            type={chartType}
-            height={400}
-          />
-        </div>
-      ) : (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-        </div>
-      )}
+      <div className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}>
+        <ReactApexChart
+          options={chartOptions}
+          series={chartData}
+          type={chartType}
+          height={400}
+        />
+      </div>
     </div>
 
     {/* Additional coin info */}
