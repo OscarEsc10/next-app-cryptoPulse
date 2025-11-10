@@ -89,9 +89,19 @@ const OverviewStats: React.FC = () => {
     }).format(value);
   };
 
+  // Safely get values with proper type checking
   const btcDominance = globalData?.market_cap_percentage?.btc?.toFixed(2);
   const ethDominance = globalData?.market_cap_percentage?.eth?.toFixed(2);
   const marketCapChange = globalData?.market_cap_change_percentage_24h_usd?.toFixed(2);
+  
+  // Handle both object and direct number formats for market cap and volume
+  const marketCap = typeof globalData?.total_market_cap === 'object' 
+    ? globalData.total_market_cap.usd 
+    : globalData?.total_market_cap;
+    
+  const volume = typeof globalData?.total_volume === 'object' 
+    ? globalData.total_volume.usd 
+    : globalData?.total_volume;
 
   return (
     <div className="space-y-8">
@@ -99,14 +109,14 @@ const OverviewStats: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard 
           title="Total Market Cap" 
-          value={formatCurrency(globalData.total_market_cap.usd)}
+          value={marketCap ? formatCurrency(marketCap) : 'N/A'}
           icon={BarChart2}
           change={parseFloat(marketCapChange || '0')}
           loading={loading}
         />
         <StatCard 
           title="24h Trading Volume" 
-          value={formatCurrency(globalData.total_volume.usd)}
+          value={volume ? formatCurrency(volume) : 'N/A'}
           icon={Activity}
           loading={loading}
         />
