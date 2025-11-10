@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { GetTopCryptos, GetCoinMarketChart } from "../lib/coingecko";
-import { CryptoCurrency } from "@/types/coingeckoInterface";
+import { GetTopCryptos, GetCoinMarketChart, GetCoinDetails, fetchFromApi } from "../lib/coingecko";
+import type { CryptoCurrency } from "@/types/coingeckoInterface";
 
 export type TimeRange = '1d' | '7d' | '14d' | '30d' | '90d' | '1y';
 
@@ -38,10 +38,75 @@ export const useMarketData = () => {
       const controller = new AbortController();
       abortControllerRef.current = controller;
       
-      const data = await GetTopCryptos();
+      // List of specific coins we want to ensure are included
+      const requiredCoins = [
+        'bitcoin',      // BTC
+        'ethereum',     // ETH
+        'tether',       // USDT
+        'usd-coin',     // USDC
+        'binancecoin',  // BNB
+        'ripple',       // XRP
+        'solana',       // SOL
+        'cardano',      // ADA
+        'avalanche-2',  // AVAX
+        'polkadot'      // DOT
+      ];
+      
+      // First, fetch the top 10 coins
+      let data = await GetTopCryptos('usd', 10);
+      
+      // Check which required coins are missing
+      const missingCoins = requiredCoins.filter(
+        coinId => !data.some((coin: CryptoCurrency) => coin.id === coinId)
+      );
+      
+      // If we're missing any required coins, fetch them individually
+      if (missingCoins.length > 0) {
+        try {
+          // Fetch all missing coins in parallel using their details endpoint
+          const missingCoinsData = await Promise.all(
+            missingCoins.map(coinId => 
+              GetCoinDetails(coinId)
+                .then(coin => ({
+                  ...coin,
+                  id: coin.id,
+                  name: coin.name,
+                  symbol: coin.symbol.toUpperCase(),
+                  current_price: coin.market_data.current_price.usd,
+                  price_change_percentage_24h: coin.market_data.price_change_percentage_24h,
+                  market_cap: coin.market_data.market_cap.usd,
+                  image: coin.image?.small || coin.image?.thumb || ''
+                }))
+                .catch(() => null)
+            )
+          );
+          
+          // Add the successfully fetched coins to our data
+          missingCoinsData.forEach((coin, index) => {
+            if (coin && data.length < 15) { // Limit to 15 coins max
+              data.push(coin);
+            }
+          });
+          
+          // Sort by market cap to maintain order
+          data.sort((a: CryptoCurrency, b: CryptoCurrency) => b.market_cap - a.market_cap);
+          
+        } catch (error) {
+          console.warn('Failed to fetch some coin data:', error);
+          // Continue with the data we have
+        }
+      }
+      
       if (!controller.signal.aborted) {
         setCoins(data);
         setError(null);
+        
+        // Pre-fetch historical data for the first 3 coins with delays
+        data.slice(0, 3).forEach((coin: CryptoCurrency, index: number) => {
+          setTimeout(() => {
+            fetchHistoricalData(coin.id, '7d');
+          }, 1000 * (index + 1)); // 1s delay between each request
+        });
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {

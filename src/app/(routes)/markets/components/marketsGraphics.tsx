@@ -316,11 +316,14 @@ export const MarketGraphics = () => {
               onChange={handleCoinChange}
               className="bg-white text-gray-800 rounded-md px-3 py-2 text-sm border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             >
-              {coins.map((coin) => (
-                <option key={coin.id} value={coin.id}>
-                  {coin.name} ({coin.symbol?.toUpperCase() || 'N/A'})
-                </option>
-              ))}
+              {Array.from(new Map(coins.map(coin => [coin.id, coin])).values())
+                .filter(coin => coin) // Remove any null/undefined entries
+                .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically
+                .map((coin) => (
+                  <option key={`${coin.id}-${coin.symbol}`} value={coin.id}>
+                    {coin.name} ({coin.symbol?.toUpperCase() || 'N/A'})
+                  </option>
+                ))}
             </select>
           </div>
 

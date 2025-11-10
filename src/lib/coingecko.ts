@@ -15,7 +15,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper function to handle API calls with retry logic
-async function fetchFromApi<T>(
+export async function fetchFromApi<T>(
   endpoint: string, 
   params: Record<string, any> = {},
   retries = 3,
