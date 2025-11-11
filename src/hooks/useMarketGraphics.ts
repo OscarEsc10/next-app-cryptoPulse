@@ -43,12 +43,12 @@ export const useMarketData = () => {
         'bitcoin',      // BTC - Most reliable
         'ethereum',     // ETH - Very reliable
         'tether',       // USDT - Stablecoin, usually quick
-        'usd-coin',     // USDC - Another stablecoin
-        'binancecoin',  // BNB - Binance's coin
-        'ripple',       // XRP - Well-established
-        'cardano',      // ADA - Popular and usually stable
-        'solana',       // SOL - Fast blockchain
-        'polkadot',     // DOT - Reliable
+        // 'usd-coin',     // USDC - Another stablecoin
+        // 'binancecoin',  // BNB - Binance's coin
+        // 'ripple',       // XRP - Well-established
+        // 'cardano',      // ADA - Popular and usually stable
+        // 'solana',       // SOL - Fast blockchain
+        // 'polkadot',     // DOT - Reliable
       ];
       // Fetch only the top 5 coins
       let data = await GetTopCryptos('usd', 5);
