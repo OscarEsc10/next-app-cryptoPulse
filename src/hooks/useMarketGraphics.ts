@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { GetTopCryptos, GetCoinMarketChart, GetCoinDetails, fetchFromApi } from "../lib/coingecko";
+import { GetTopCryptos, GetCoinMarketChart, GetCoinDetails } from "../lib/coingecko";
 import type { CryptoCurrency } from "@/types/coingeckoInterface";
 
 export type TimeRange = '1d' | '7d' | '14d' | '30d' | '90d' | '1y';
@@ -26,86 +26,86 @@ export const useMarketData = () => {
 
   const fetchMarketData = useCallback(async () => {
     if (loadingRef.current.market) return;
-    
+
     try {
       loadingRef.current.market = true;
       setLoading(true);
-      
+
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-      
+
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      
-      // List of specific coins we want to ensure are included
+
+      // Reduced list of top 5 major cryptocurrencies
       const requiredCoins = [
-        'bitcoin',      // BTC
-        'ethereum',     // ETH
-        'tether',       // USDT
-        'usd-coin',     // USDC
-        'binancecoin',  // BNB
-        'ripple',       // XRP
-        'solana',       // SOL
-        'cardano',      // ADA
-        'avalanche-2',  // AVAX
-        'polkadot'      // DOT
+        'bitcoin',      // BTC - Most reliable
+        'ethereum',     // ETH - Very reliable
+        'tether',       // USDT - Stablecoin, usually quick
+        'usd-coin',     // USDC - Another stablecoin
+        'binancecoin',  // BNB - Binance's coin
+        'ripple',       // XRP - Well-established
+        'cardano',      // ADA - Popular and usually stable
+        'solana',       // SOL - Fast blockchain
+        'polkadot',     // DOT - Reliable
       ];
-      
-      // First, fetch the top 10 coins
-      let data = await GetTopCryptos('usd', 10);
-      
-      // Check which required coins are missing
+      // Fetch only the top 5 coins
+      let data = await GetTopCryptos('usd', 5);
+
+      // Filter to only include our required coins
+      data = data.filter((coin: CryptoCurrency) =>
+        requiredCoins.includes(coin.id)
+      );
+
+      // Add any missing required coins
       const missingCoins = requiredCoins.filter(
         coinId => !data.some((coin: CryptoCurrency) => coin.id === coinId)
       );
-      
-      // If we're missing any required coins, fetch them individually
+
+      // Fetch missing coins individually if needed
       if (missingCoins.length > 0) {
         try {
-          // Fetch all missing coins in parallel using their details endpoint
           const missingCoinsData = await Promise.all(
-            missingCoins.map(coinId => 
+            missingCoins.map(coinId =>
               GetCoinDetails(coinId)
                 .then(coin => ({
-                  ...coin,
                   id: coin.id,
                   name: coin.name,
                   symbol: coin.symbol.toUpperCase(),
-                  current_price: coin.market_data.current_price.usd,
-                  price_change_percentage_24h: coin.market_data.price_change_percentage_24h,
-                  market_cap: coin.market_data.market_cap.usd,
+                  current_price: coin.market_data?.current_price?.usd || 0,
+                  price_change_percentage_24h: coin.market_data?.price_change_percentage_24h || 0,
+                  market_cap: coin.market_data?.market_cap?.usd || 0,
                   image: coin.image?.small || coin.image?.thumb || ''
                 }))
                 .catch(() => null)
             )
           );
-          
-          // Add the successfully fetched coins to our data
-          missingCoinsData.forEach((coin, index) => {
-            if (coin && data.length < 15) { // Limit to 15 coins max
+
+          // Add successfully fetched coins
+          missingCoinsData.forEach(coin => {
+            if (coin) {
               data.push(coin);
             }
           });
-          
-          // Sort by market cap to maintain order
+
+          // Sort by market cap
           data.sort((a: CryptoCurrency, b: CryptoCurrency) => b.market_cap - a.market_cap);
-          
+
         } catch (error) {
           console.warn('Failed to fetch some coin data:', error);
-          // Continue with the data we have
         }
       }
-      
+
       if (!controller.signal.aborted) {
         setCoins(data);
         setError(null);
-        
-        // Pre-fetch historical data for the first 3 coins with delays
+
+        // Pre-fetch historical data for the first 3 coins with increased delays
         data.slice(0, 3).forEach((coin: CryptoCurrency, index: number) => {
           setTimeout(() => {
             fetchHistoricalData(coin.id, '7d');
-          }, 1000 * (index + 1)); // 1s delay between each request
+          }, 2000 * (index + 1)); // 2s delay between each request
         });
       }
     } catch (err: any) {
@@ -121,24 +121,24 @@ export const useMarketData = () => {
 
   const fetchHistoricalData = useCallback(async (coinId: string, range: TimeRange = '7d') => {
     const dataKey = `${coinId}_${range}`;
-    
+
     // Skip if already loading or already have data
     if (loadingRef.current[dataKey] || historicalData[dataKey]) return;
-    
+
     try {
       loadingRef.current[dataKey] = true;
       setLoading(true);
-      
+
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-      
+
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      
+
       const days = getDaysFromRange(range);
       const data = await GetCoinMarketChart(coinId, days);
-      
+
       if (!controller.signal.aborted && data?.prices) {
         setHistoricalData(prev => ({
           ...prev,
@@ -148,10 +148,7 @@ export const useMarketData = () => {
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         console.error(`Failed to fetch historical data for ${coinId}:`, err);
-        setHistoricalData(prev => ({
-          ...prev,
-          [dataKey]: []
-        }));
+        // Don't cache errors to allow retries
       }
     } finally {
       loadingRef.current[dataKey] = false;
@@ -159,26 +156,24 @@ export const useMarketData = () => {
     }
   }, [historicalData]);
 
-  // Cleanup function
   useEffect(() => {
+    fetchMarketData();
+
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, []);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchMarketData();
   }, [fetchMarketData]);
 
-  return { 
-    coins, 
-    loading, 
-    error, 
+  return {
+    coins,
+    loading,
+    error,
     historicalData,
     fetchHistoricalData,
-    refetch: fetchMarketData 
+    refresh: fetchMarketData
   };
 };
+
+export default useMarketData;
