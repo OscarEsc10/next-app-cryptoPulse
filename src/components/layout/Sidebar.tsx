@@ -19,7 +19,6 @@ export default function Sidebar() {
       label: "Markets",
       alsoStartsWith: ["/coin"]
     },
-    { href: "/news", icon: <FiBell size={18} />, label: "News" },
     { href: "/settings", icon: <FiSettings size={18} />, label: "Settings" },
   ];
 
